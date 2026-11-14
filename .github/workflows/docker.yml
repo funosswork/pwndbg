@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - dev
+      - lldb-parallel-merge
+      - lldb-parallel-merge-control
+      - skip-gdb-merge
   pull_request:
 
 concurrency:
@@ -77,7 +80,7 @@ jobs:
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
       - name: Login to GHCR
-        if: github.event_name == 'push'
+        if: false
         uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
         with:
           registry: ghcr.io
@@ -91,7 +94,7 @@ jobs:
           docker buildx build \
             --load \
             --cache-from type=registry,ref=ghcr.io/pwndbg/cache:${{ matrix.image }}-amd64 \
-            ${{ github.event_name == 'push' && format('--cache-to type=registry,ref=ghcr.io/pwndbg/cache:{0}-amd64,mode=max', matrix.image) || '' }} \
+            ${{ false && format('--cache-to type=registry,ref=ghcr.io/pwndbg/cache:{0}-amd64,mode=max', matrix.image) || '' }} \
             -f ${{ matrix.dockerfile }} \
             --build-arg image=${{ matrix.base }} \
             -t ghcr.io/pwndbg/pwndbg:${{ matrix.image }}-amd64 \
@@ -135,7 +138,7 @@ jobs:
           '
 
       - name: Push full image to registry
-        if: ${{ !cancelled() && github.event_name == 'push' && steps.build.outcome == 'success' }}
+        if: false
         run: docker push ghcr.io/pwndbg/pwndbg:${{ matrix.image }}-amd64
 
   docker_aarch64:
@@ -176,7 +179,7 @@ jobs:
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
       - name: Login to GHCR
-        if: github.event_name == 'push'
+        if: false
         uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
         with:
           registry: ghcr.io
@@ -190,7 +193,7 @@ jobs:
           docker buildx build \
             --load \
             --cache-from type=registry,ref=ghcr.io/pwndbg/cache:${{ matrix.image }}-arm64 \
-            ${{ github.event_name == 'push' && format('--cache-to type=registry,ref=ghcr.io/pwndbg/cache:{0}-arm64,mode=max', matrix.image) || '' }} \
+            ${{ false && format('--cache-to type=registry,ref=ghcr.io/pwndbg/cache:{0}-arm64,mode=max', matrix.image) || '' }} \
             -f ${{ matrix.dockerfile }} \
             --build-arg image=${{ matrix.base }} \
             -t ghcr.io/pwndbg/pwndbg:${{ matrix.image }}-arm64 \
@@ -233,12 +236,12 @@ jobs:
           '
 
       - name: Push full image to registry
-        if: ${{ !cancelled() && github.event_name == 'push' && steps.build.outcome == 'success' }}
+        if: false
         run: docker push ghcr.io/pwndbg/pwndbg:${{ matrix.image }}-arm64
 
   create_manifest:
     needs: [docker_x86-64, docker_aarch64]
-    if: ${{ !cancelled() && github.event_name == 'push' }}
+    if: false
     runs-on: ubuntu-latest
     steps:
       - name: Set up Docker Buildx
