@@ -20,7 +20,7 @@ class CollectTestFunctionNames:
 
     def pytest_collection_modifyitems(self, items):
         for item in items:
-            self.collected.append(item.nodeid)
+            self.collected.append((item.nodeid, item.get_closest_marker("skip")))
 
 
 collector = CollectTestFunctionNames()
@@ -32,8 +32,13 @@ if rv == pytest.ExitCode.INTERRUPTED:
 
 
 print("Listing collected tests:")
-for nodeid in collector.collected:
+for nodeid, skip in collector.collected:
     print("Test:", nodeid)
+    if skip is not None:
+        # Lets the host report the skip without starting a GDB session for it.
+        print(
+            "Skip:", skip.kwargs.get("reason", skip.args[0] if skip.args else "unconditional skip")
+        )
 
 # easy way to exit GDB session
 sys.exit(0)
