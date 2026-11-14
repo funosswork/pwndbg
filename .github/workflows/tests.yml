@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - dev
+      - lldb-parallel-ci
   pull_request:
 
 concurrency:
