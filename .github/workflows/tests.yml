@@ -3,6 +3,8 @@ on:
   push:
     branches:
       - dev
+      - ci2-lldb-tests-parallel
+      - ci3-skip-marked-tests
   pull_request:
 
 concurrency:
