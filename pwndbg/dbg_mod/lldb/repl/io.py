@@ -497,7 +497,7 @@ class IODriverPseudoTerminal(IODriver):
         self.worker = worker
 
         # Try to set up our opportunistic control of the input terminal.
-        self.termcontrol = OpportunisticTerminalControl()
+        self.termcontrol = OpportunisticTerminalControl(sys.stdin.fileno())
         if not self.termcontrol.supported:
             print("warning: could not set up terminal control")
 
