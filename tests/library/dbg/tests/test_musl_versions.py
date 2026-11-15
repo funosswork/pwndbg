@@ -16,19 +16,23 @@ def version_tuple(ver: str) -> tuple[int, ...]:
     return tuple(int(p) for p in ver.split("."))
 
 
-def _version_linkages() -> list[tuple[str, str]]:
-    return [(ver, linkage) for ver in MUSL_VERSIONS for linkage in ("dynamic", "static")]
-
-
-_COMBOS = _version_linkages()
+_COMBOS = [
+    pytest.param(
+        ver,
+        linkage,
+        marks=[]
+        if get_binary(f"heap_musl.musl-{ver}-{linkage}.out").exists()
+        else [pytest.mark.skip(reason=f"musl {ver} ({linkage}) test binary not available")],
+    )
+    for ver in MUSL_VERSIONS
+    for linkage in ("dynamic", "static")
+]
 
 
 @pytest.mark.parametrize("musl_version,linkage", _COMBOS)
 @pwndbg_test
 async def test_musl_version_detection(ctrl: Controller, musl_version: str, linkage: str) -> None:
     binary = get_binary(f"heap_musl.musl-{musl_version}-{linkage}.out")
-    if not binary.exists():
-        pytest.skip(f"musl {musl_version} ({linkage}) test binary not available")
 
     import pwndbg.aglib
     import pwndbg.libc

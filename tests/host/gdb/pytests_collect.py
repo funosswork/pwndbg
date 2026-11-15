@@ -4,6 +4,7 @@ import os
 import sys
 
 import pytest
+from _pytest.skipping import evaluate_skip_marks
 
 TESTS_PATH = os.environ.get("TESTS_PATH")
 
@@ -20,7 +21,11 @@ class CollectTestFunctionNames:
 
     def pytest_collection_modifyitems(self, items):
         for item in items:
-            self.collected.append(item.nodeid)
+            try:
+                skip = evaluate_skip_marks(item)
+            except (Exception, pytest.fail.Exception):
+                skip = None  # a bad mark still errors when the test runs
+            self.collected.append((item.nodeid, skip))
 
 
 collector = CollectTestFunctionNames()
@@ -32,8 +37,11 @@ if rv == pytest.ExitCode.INTERRUPTED:
 
 
 print("Listing collected tests:")
-for nodeid in collector.collected:
+for nodeid, skip in collector.collected:
     print("Test:", nodeid)
+    # The host skips these without starting GDB; stderr keeps reasons out of the test-name scan.
+    if skip and isinstance(skip.reason, str) and "\n" not in skip.reason:
+        print(f"Skip: {nodeid}\t{skip.reason}", file=sys.stderr)
 
 # easy way to exit GDB session
 sys.exit(0)
